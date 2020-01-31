@@ -10,14 +10,12 @@ import org.acme.service.KeycloackService;
 
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
+import javax.jws.WebParam;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 @Path("/keycloack")
 public class ExampleResource {
-
-    @Inject
-    SecurityIdentity identity;
     @Inject
     KeycloackService keycloackService;
 
@@ -33,7 +31,7 @@ public class ExampleResource {
     @GET
     @Path("login")
     @Produces(MediaType.APPLICATION_JSON)
-    public Token login(@QueryParam("login") String login, @QueryParam("password")  String password) {
+    public Token login(@WebParam String login, String password) throws WebApplicationException {
         return keycloackService.login(login, password);
     }
 
