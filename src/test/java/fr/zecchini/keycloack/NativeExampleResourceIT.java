@@ -1,4 +1,4 @@
-package org.acme;
+package fr.zecchini.keycloack;
 
 import io.quarkus.test.junit.NativeImageTest;
 
