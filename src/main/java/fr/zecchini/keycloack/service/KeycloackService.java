@@ -44,7 +44,6 @@ public class KeycloackService {
             Token token = this.mapper.readValue(response.getBody().toString(), Token.class);
             return  token;
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
             throw new WebApplicationException(response.getStatus());
         }
     }
