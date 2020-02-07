@@ -5,6 +5,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import fr.zecchini.keycloack.models.OfflineToken;
+import fr.zecchini.keycloack.utils.environment.AppConfigurations;
+import fr.zecchini.keycloack.utils.environment.KeycloackConfigurations;
 import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
 import kong.unirest.Unirest;
@@ -14,6 +16,7 @@ import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import javax.ws.rs.WebApplicationException;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,20 +25,23 @@ import java.util.List;
 public class KeycloackService {
 
     private final ObjectMapper mapper;
+    private KeycloackConfigurations keycloackConfigurations;
 
-    public KeycloackService(){
+    @Inject
+    public KeycloackService(AppConfigurations appConfigurations){
         this.mapper = new ObjectMapper();
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL.NON_NULL);
+        keycloackConfigurations = appConfigurations.keycloackConfigurations;
     }
 
     public Token login (String username, String password) throws WebApplicationException {
-        HttpResponse<JsonNode> response =  Unirest.post("http://192.168.1.42:8180/auth/realms/equido/protocol/openid-connect/token")
+        HttpResponse<JsonNode> response =  Unirest.post( keycloackConfigurations.url + "/protocol/openid-connect/token")
                 .header("content-type", "application/x-www-form-urlencoded")
                 .field("username", username)
                 .field("password", password)
                 .field("grant_type", "password")
-                .field("client_id", "backend-service")
-                .field("client_secret", "abd4dbf7-9a80-40bd-9c9e-1ecc4eaca7f6")
+                .field("client_id", this.keycloackConfigurations.clientId)
+                .field("client_secret", this.keycloackConfigurations.credentialSecret)
                 .asJson();
         if (response.getStatus() != 200)
             throw new WebApplicationException(response.getStatus());
@@ -49,14 +55,14 @@ public class KeycloackService {
     }
 
     public OfflineToken loginOffline (String username, String password) throws WebApplicationException {
-        HttpResponse<JsonNode> response =  Unirest.post("http://192.168.1.42:8180/auth/realms/equido/protocol/openid-connect/token")
+        HttpResponse<JsonNode> response =  Unirest.post(keycloackConfigurations.url + "/protocol/openid-connect/token")
                 .header("content-type", "application/x-www-form-urlencoded")
                 .field("username", username)
                 .field("password", password)
                 .field("grant_type", "password")
-                .field("client_id", "backend-service")
+                .field("client_id", this.keycloackConfigurations.clientId)
+                .field("client_secret", this.keycloackConfigurations.credentialSecret)
                 .field("scope", "openid info offline_access")
-                .field("client_secret", "abd4dbf7-9a80-40bd-9c9e-1ecc4eaca7f6")
                 .asJson();
 
         if (response.getStatus() != 200)
@@ -72,12 +78,12 @@ public class KeycloackService {
     }
 
     public Token refreshToken (String refreshToken) throws WebApplicationException {
-        HttpResponse<JsonNode> response =  Unirest.post("http://192.168.1.42:8180/auth/realms/equido/protocol/openid-connect/token")
+        HttpResponse<JsonNode> response =  Unirest.post(this.keycloackConfigurations.url + "/protocol/openid-connect/token")
                 .header("content-type", "application/x-www-form-urlencoded")
                 .field("grant_type", "refresh_token")
                 .field("refresh_token", refreshToken)
-                .field("client_id", "backend-service")
-                .field("client_secret", "abd4dbf7-9a80-40bd-9c9e-1ecc4eaca7f6")
+                .field("client_id", this.keycloackConfigurations.clientId)
+                .field("client_secret", this.keycloackConfigurations.credentialSecret)
                 .asJson();
         if (response.getStatus() != 200)
             throw new WebApplicationException(response.getStatus());
@@ -115,7 +121,7 @@ public class KeycloackService {
             String test = new Gson().toJson(userRepresentation);
             System.out.println(o);
             System.out.println(test);
-            HttpResponse<JsonNode> response =  Unirest.post("http://192.168.1.42:8180/auth/admin/realms/equido/users")
+            HttpResponse<JsonNode> response =  Unirest.post(this.keycloackConfigurations.url + "/users")
                     .header("content-type", "application/json")
                     .header("Authorization", "Bearer " + token)
                     .body(o)
@@ -132,13 +138,12 @@ public class KeycloackService {
 
     public void logout(String refreshToken) {
         HttpResponse<JsonNode> response = Unirest
-                .post("http://192.168.1.42:8180/auth/realms/equido/protocol/openid-connect/logout")
+                .post(this.keycloackConfigurations.url + "/protocol/openid-connect/logout")
                 .header("content-type", "application/x-www-form-urlencoded")
                 .field("grant_type", "refresh_token")
                 .field("refresh_token", refreshToken)
-                //.field("token", refreshToken)
-                .field("client_id", "backend-service")
-                .field("client_secret", "abd4dbf7-9a80-40bd-9c9e-1ecc4eaca7f6")
+                .field("client_id", this.keycloackConfigurations.clientId)
+                .field("client_secret", this.keycloackConfigurations.credentialSecret)
                 .asJson();
         if (!response.isSuccess())
             throw new WebApplicationException(response.getStatus());
@@ -147,7 +152,7 @@ public class KeycloackService {
     public UserRepresentation user (String id) {
         String token = login("user_manager", "manager").accessToken;
         HttpResponse<JsonNode> response = Unirest
-                .get("http://192.168.1.42:8180/auth/admin/realms/equido/users/" + id)
+                .get(this.keycloackConfigurations.url + "/users/" + id)
                 .header("Authorization", "Bearer " + token)
                 .asJson();
         if (!response.isSuccess())
