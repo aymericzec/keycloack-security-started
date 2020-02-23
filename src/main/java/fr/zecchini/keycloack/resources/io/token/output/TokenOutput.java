@@ -1,15 +1,11 @@
-package fr.zecchini.keycloack.resources.outputs;
+package fr.zecchini.keycloack.resources.io.token.output;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import fr.zecchini.keycloack.models.OfflineToken;
-import fr.zecchini.keycloack.models.Token;
+import fr.zecchini.keycloack.models.token.Token;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class OfflineTokenOutput {
-    @JsonProperty("id_token")
-    public String id;
-
+public class TokenOutput {
     @JsonProperty("access_token")
     public String accessToken;
 
@@ -22,14 +18,14 @@ public class OfflineTokenOutput {
     @JsonProperty("refresh_expires_in")
     public int refreshExpire;
 
-    public OfflineTokenOutput(String accessToken, String refreshToken, int expire, int refreshExpire) {
+    public TokenOutput(String accessToken, String refreshToken, int expire, int refreshExpire) {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
         this.expire = expire;
         this.refreshExpire = refreshExpire;
     }
 
-    public static OfflineTokenOutput create (OfflineToken token) {
-        return new OfflineTokenOutput(token.accessToken, token.refreshToken, token.expire, token.refreshExpire);
+    public static TokenOutput create (Token token) {
+        return new TokenOutput(token.accessToken, token.refreshToken, token.expire, token.refreshExpire);
     }
 }

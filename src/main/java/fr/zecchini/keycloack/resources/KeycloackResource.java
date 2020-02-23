@@ -1,39 +1,41 @@
 package fr.zecchini.keycloack.resources;
 
-import fr.zecchini.keycloack.models.OfflineToken;
-import fr.zecchini.keycloack.models.Token;
-import fr.zecchini.keycloack.resources.inputs.LoginUserInput;
-import fr.zecchini.keycloack.resources.inputs.RefreshTokenInput;
-import fr.zecchini.keycloack.resources.inputs.SignupUserInput;
-import fr.zecchini.keycloack.resources.outputs.OfflineTokenOutput;
-import fr.zecchini.keycloack.resources.outputs.TokenOutput;
-import fr.zecchini.keycloack.service.KeycloackService;
+import fr.zecchini.keycloack.models.user.SigninUser;
+import fr.zecchini.keycloack.models.user.SignupResponse;
+import fr.zecchini.keycloack.models.user.SignupUser;
+import fr.zecchini.keycloack.models.token.Token;
+import fr.zecchini.keycloack.resources.io.user.input.SigninUserInput;
+import fr.zecchini.keycloack.resources.io.token.input.RefreshTokenInput;
+import fr.zecchini.keycloack.resources.io.user.input.SignupUserInput;
+import fr.zecchini.keycloack.resources.io.token.output.TokenOutput;
+import fr.zecchini.keycloack.service.KeycloakService;
 import org.keycloak.representations.idm.UserRepresentation;
 
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 @Path("/keycloack")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class KeycloackResource {
     @Inject
-    KeycloackService keycloackService;
+    KeycloakService keycloackService;
 
     @POST
-    @Path("login")
-    public TokenOutput login(LoginUserInput login) throws WebApplicationException {
-        Token token = keycloackService.login(login.username, login.password);
-        return TokenOutput.create(token);
+    @Path("signup")
+    public SignupResponse signup(SignupUserInput signupUserInput) throws WebApplicationException {
+        SignupUser signupUser = SignupUser.create(signupUserInput);
+        return keycloackService.signup(signupUser);
     }
 
     @POST
-    @Path("login-offline")
-    public OfflineTokenOutput loginOffline(LoginUserInput login) throws WebApplicationException {
-        OfflineToken offlineToken = keycloackService.loginOffline(login.username, login.password);
-        return OfflineTokenOutput.create(offlineToken);
+    @Path("signin")
+    public TokenOutput signin(SigninUserInput signinUserInput) throws WebApplicationException {
+        Token token = keycloackService.signin(SigninUser.create(signinUserInput));
+        return TokenOutput.create(token);
     }
 
     @POST
@@ -43,14 +45,8 @@ public class KeycloackResource {
     }
 
     @POST
-    @Path("signup")
-    public OfflineTokenOutput signup(SignupUserInput signupUserInput) throws WebApplicationException {
-        OfflineToken offlineToken = keycloackService.signup(signupUserInput);
-        return OfflineTokenOutput.create(offlineToken);
-    }
-
-    @POST
     @Path("logout")
+    @RolesAllowed("user")
     public void logout(RefreshTokenInput refreshTokenInput) throws WebApplicationException {
         keycloackService.logout(refreshTokenInput.refreshToken);
     }
@@ -59,6 +55,14 @@ public class KeycloackResource {
     @Path("user")
     @RolesAllowed("user")
     public UserRepresentation user() throws WebApplicationException {
-        return keycloackService.user("b926ca4e-dd07-4014-8d94-5f0074c6cbdd");
+        return keycloackService.user();
+    }
+
+    @DELETE
+    @Path("user")
+    @RolesAllowed("user")
+    public Response deleteUser() throws WebApplicationException {
+        keycloackService.deleteUser();
+        return Response.status(200).build();
     }
 }

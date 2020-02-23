@@ -1,4 +1,4 @@
-package fr.zecchini.keycloack.resources.inputs;
+package fr.zecchini.keycloack.resources.io.token.input;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

@@ -10,7 +10,7 @@ import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 @Provider
-public class HttpExeptionMapper implements ExceptionMapper<Exception> {
+public class HttpExceptionMapper implements ExceptionMapper<Exception> {
 
     private ObjectMapper mapper = new ObjectMapper();
 
